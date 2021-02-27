@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TicTacToe</title>
+  <style type="text/css">
+    .box {
+      display: inline-block;
+      border: 1px solid gray;
+    }
+    .list {
+      display: flex;
+    }
+    .list + .list {
+      border-top: 1px solid gray;
+    }
+    .item {
+      width: 50px;
+      height: 50px;
+      text-align: center;
+      line-height: 49px;
+      font-size: 28px;
+    }
+    .item + .item {
+      border-left: 1px solid gray;
+    }
+  </style>
+</head>
+<body>
+  <div class="box"></div>
+  <div>
+    <button onclick="init()">init</button>
+  </div>
+  <script>
+    const guid = 3; // 格子
+    const line = 3; // 连线长度
+    const pattern = []; // 棋盘数据
+    const box = document.getElementsByClassName('box')[0]; // 棋盘
+    const fragment = document.createDocumentFragment();
+    let type = 2;
+    let isWin = false;
+    // 生成棋盘初始数据
+    function init() {
+      type = 2;
+      isWin = false;
+      for(let i=0; i<guid; i++) {
+        for(let j=0; j<guid; j++) {
+          pattern[i*guid+j] = 0;
+        }
+      }
+      show();
+    }
+    // 生成棋盘
+    function show() {
+      box.innerHTML = '';
+      for(let i=0; i<guid; i++) {
+        const list = document.createElement('div');
+        list.className = 'list';
+        for(let j=0; j<guid; j++) {
+          const item = document.createElement('div');
+          item.className = 'item';
+          item.innerText = pattern[i*guid+j] === 1 ? 'O' : pattern[i*guid+j] === 2 ? 'X' : '';
+          item.addEventListener('click', () => move(j, i));
+          list.appendChild(item);
+        }
+        fragment.appendChild(list);
+      }
+      box.appendChild(fragment);
+    };
+    // 生成棋子
+    function move(x, y) {
+      if (pattern[y*guid+x] === 0 && !isWin) {
+        type = 3 - type;
+        pattern[y*guid+x] = type;
+        show();
+        if (check(pattern, type, n)) {
+          alert(`${type === 1 ? 'O' : 'X'} 赢了`);
+          isWin = true;
+          return;
+        }
+      }
+    }
+    // 胜负判断
+    function check(pattern, type, n) {
+      /* for(let i=0; i<guid; i++) {
+        
+      } */
+      for(let i=0; i<guid; i++) {
+        // 判断行← →
+        for(let j=0; j<guid; j++) {
+          let win = true;
+          for(let x=0; x<line; x++) {
+            pattern[i*guid+j+x] !== type && (win = false);
+          }
+          if (win) return win;
+          if (j+line >= guid) break;
+        }
+        if (i+line <= guid) {
+          // 判断列↑ ↓
+          for(let j=0; j<guid; j++) {
+            let win = true;
+            for(let x=0; x<line; x++) {
+              pattern[(i+x)*guid+j] !== type && (win = false);
+            }
+            if (win) return win;
+          }
+          // 判断斜线 左上右下↖↘
+          for(let j=0; j<guid; j++) {
+            let win = true;
+            for(let x=0; x<line; x++) {
+              pattern[j+x + (i+x)*guid] !== type && (win = false);
+            }
+            if (win) return win;
+            if (j+line >= guid) break;
+          }
+          // 判断斜线 左下右上↙↗
+          for(let j=0; j<guid; j++) {
+            let win = true;
+            for(let x=0; x<line; x++) {
+              pattern[j+x+(i-x+line-1)*guid] !== type && (win = false);
+            }
+            if (win) return win;
+            if (j+line >= guid) break;
+          }
+        }
+      }
+      return false;
+    }
+    function clone() {
+      return Object.create(pattern)
+    }
+    function willWin(pattern, type) {
+      for(let i=0; i<guid; i++) {
+        for(let j=0; j<guid; j++) {
+          if (pattern[i*guid+j]) continue;
+          const arr = clone();
+          arr[i*guid+j] = type;
+          if(check(arr, type)) return i*guid+j;
+        }
+      }
+      return false
+    }
+    function bestChoice(pattern, type, x) {
+      let p;
+      if (p = willWin(pattern, type)) {
+        return {
+          point: p,
+          result: 1
+        }
+      }
+      let result = -2;
+      let point = null;
+      outer:for(let i=0; i<guid; i++) {
+        for(let j=0; j<guid; j++) {
+          if (pattern[i*guid+j]) continue;
+          const arr = clone();
+          arr[i*guid+j] = type;
+          const r = bestChoice(arr, 3-type).result;
+          if (-r > result) {
+            result = -r;
+            point = j+i*guid;
+          }
+          if (result === 1 || x <= 0) break outer;
+          x--;
+        }
+      }
+      return {
+        point,
+        result: point && point !== 0 ? result : 0
+      }
+    }
+    init();
+  </script>
+</body>
+</html>
