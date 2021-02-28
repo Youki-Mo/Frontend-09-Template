@@ -40,7 +40,7 @@
     const box = document.getElementsByClassName('box')[0]; // 棋盘
     const fragment = document.createDocumentFragment();
     const len = guid*guid;
-    let type = 1;
+    let type = 2;
     let isWin = false;
     // 生成棋盘初始数据
     function init() {
@@ -84,7 +84,7 @@
       }
     }
     function aiMove(n) {
-      let choice = bestChoice(pattern, type, n);
+      let choice = bestChoice(pattern, 3-type, n);
       console.log(choice);
       if (!(choice.point >= 0)) return;
       pattern[choice.point] = type;
@@ -100,40 +100,46 @@
     function check(pattern, type, n) {
       for(let i=0; i<line; i++) {
         // 判断行← →
-        let x = n-i,
-        win = true;
+        let x = n-i;
         if (x>=0) {
+          if (i===0 && guid-x%guid >= line) continue; // 如果换行了，直接跳出本次循环
+          let win = true;
           for(let j=0; j<line; j++) {
             (x+j>=len || pattern[x+j] !== type) && (win = false);
           }
-          if (win) return win;
+          if (win) return true;
         }
         // 判断列↑ ↓
         x = n-i*guid;
-        win = true;
         if (x >= 0) {
+          let win = true;
           for(let j=0; j<line; j++) {
             (x+j*guid>=len || pattern[x+j*guid] !== type) && (win = false);
           }
-          if (win) return win;
+          if (win) return true;
         }
         // 判断斜线 左上右下↖↘
         x = n-i*(guid+1);
-        win = true;
-        if (x >= 0) {
+        if (x >= 0 && x%guid < line-1) {
+          if (i===0 && guid-x%guid >= line) continue;
+          let win = true;
           for(let j=0; j<line; j++) {
-            (x+j*(guid+1)>=len || pattern[x+j*(guid+1)]) !== type && (win = false);
+            (x+j*(guid+1)>=len || pattern[x+j*(guid+1)] !== type) && (win = false);
           }
-          if (win) return win;
+          if (win) {
+            return true;
+          }
+          
         }
         // 判断斜线 左下右上↙↗
         x = n-i*(guid-1);
-        win = true;
-        if (x >= 0) {
+        if (x >= 0 && x%guid >= line-1) {
+          if (i===0 && guid-x%guid < line) continue;
+          let win = true;
           for(let j=0; j<line; j++) {
-            (x+j*(guid-1)>=len || pattern[x+j*(guid-1)]) !== type && (win = false);
+            (x+j*(guid-1)>=len || pattern[x+j*(guid-1)] !== type) && (win = false);
           }
-          if (win) return win;
+          if (win)  return true;
         }
       }
       return false;
@@ -184,21 +190,22 @@
           }
         }
       }
-      return false
+      return -1;
     }
-    function bestChoice(pattern, type, n, reckon = 100) {
+    function bestChoice(pattern, type, n, reckon = 1000) {
       if (reckon <= 0) return { point: n, result: 0 };
       reckon--;
       let p = willWin(pattern, type, n);
-      console.log(p);
-      if (p) {
+      // 判断p大于等于0时已经有胜的落子，拿到返回的坐标值并返回result=1
+      if (p>=0) {
         return {
           point: p,
           result: 1
         }
       }
       let result = -2, point = null;
-      for(let i=0; i<line; i++) {
+      // 穷举当前落子可能组成胜棋的位置
+      outer:for(let i=0; i<line; i++) {
         // 判断行← →
         let x = n-i;
         if (x < 0) continue;
@@ -206,12 +213,12 @@
           if (x+j>=len || pattern[x+j]) continue;
           const arr = clone(pattern);
           arr[x+j] = type;
-          let r = bestChoice(arr, 3-type, x+j, reckon).result;
+          let r = bestChoice(arr, type, x+j, reckon).result;
           if (-r > result) {
             result = -r;
             point = x+j;
           }
-          if (result == 1) return { point, result };
+          if (result == 1) break outer;
         }
         // 判断列↑ ↓
         x = n-i*guid;
@@ -220,12 +227,12 @@
           if (x+j*guid>=len || pattern[x+j*guid]) continue;
           const arr = clone(pattern);
           arr[x+j*guid] = type;
-          let r = bestChoice(arr, 3-type, x+j*guid, reckon).result;
+          let r = bestChoice(arr, type, x+j*guid, reckon).result;
           if (-r > result) {
             result = -r;
             point = x+j*guid;
           }
-          if (result == 1) return { point, result };
+          if (result == 1) break outer;
         }
         
         // 判断斜线 左上右下↖↘
@@ -235,12 +242,12 @@
           if (x+j*(guid+1)>=len || pattern[x+j*(guid+1)]) continue;
           const arr = clone(pattern);
           arr[x+j*(guid+1)] = type;
-          let r = bestChoice(arr, 3-type, x+j*(guid+1), reckon).result;
+          let r = bestChoice(arr, type, x+j*(guid+1), reckon).result;
           if (-r > result) {
             result = -r;
             point = x+j*guid;
           }
-          if (result == 1) return { point, result };
+          if (result == 1) break outer;
         }
         // 判断斜线 左下右上↙↗
         x = n-i*(guid-1);
@@ -249,12 +256,12 @@
           if (x+j*(guid-1)>=len || pattern[x+j*(guid-1)]) continue;
           const arr = clone(pattern);
           arr[x+j*(guid-1)] = type;
-          let r = bestChoice(arr, 3-type, x+j*(guid-1), reckon).result;
+          let r = bestChoice(arr, type, x+j*(guid-1), reckon).result;
           if (-r > result) {
             result = -r;
             point = x+j*guid;
           }
-          if (result == 1) return { point, result };
+          if (result == 1) break outer;
         }
       }
       return {
