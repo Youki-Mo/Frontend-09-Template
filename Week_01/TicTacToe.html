@@ -104,6 +104,7 @@
           isWin = true;
           return;
         }
+        let w;
         type = 3 - type;
         aiMove(n);
       }
@@ -120,7 +121,7 @@
         isWin = true;
         return;
       }
-      if (w = willWin(pattern, type, n) > 0) {
+      if (willWin(pattern, type, n) >= 0) {
         resultDOM.innerText = `${type === 1 ? 'O' : 'X'} 要赢了`;
       }
     }
@@ -152,11 +153,13 @@
           for(let j=line; j--;) {
             pattern[x+j*(guid+1)] !== type && (win = false);
           }
-          if (win) return true;
+          if (win) {
+            return true;
+          }
         }
         // 判断斜线 左下右上↙↗
         x = n-i*(guid-1);
-        if (x>=0 && x%guid+line > guid) {
+        if (x>=0 && x%guid+line-1 > guid) {
           let win = true;
           for(let j=line; j--;) {
             pattern[x+j*(guid-1)] !== type && (win = false);
@@ -203,7 +206,7 @@
         }
         // 判断斜线 左下右上↙↗
         x = n-i*(guid-1);
-        if (x>=0 && x%guid+line > guid) {
+        if (x>=0 && x%guid+line-1 > guid) {
           for(let j=line; j--;) {
             if (pattern[x+j*(guid-1)] !== 0) continue;
             const arr = this.clone(pattern);
@@ -228,8 +231,38 @@
       let result = -2, point = null;
       // 穷举当前落子可能组成胜棋的位置
       outer:for(let i=line; i--;) {
+        // 判断斜线 左上右下↖↘
+        let x = n-i*(guid+1);
+        if (x>=0 && x%guid+line <= guid) {
+          for(let j=line; j--;) {
+            if (pattern[x+j*(guid+1)] !== 0) continue;
+            const arr = this.clone(pattern);
+            arr[x+j*(guid+1)] = type;
+            let r = bestChoice(arr, type, x+j*(guid+1), reckon).result;
+            if (-r > result) {
+              result = -r;
+              point = x+j*(guid+1);
+            }
+            if (result == 1) break outer;
+          }
+        }
+        // 判断斜线 左下右上↙↗
+        x = n-i*(guid-1);
+        if (x>=0 && x%guid+line-1 > guid) {
+          for(let j=line; j--;) {
+            if (pattern[x+j*(guid-1)] !== 0) continue;
+            const arr = this.clone(pattern);
+            arr[x+j*(guid-1)] = type;
+            let r = bestChoice(arr, type, x+j*(guid-1), reckon).result;
+            if (-r > result) {
+              result = -r;
+              point = x+j*(guid-1);
+            }
+            if (result == 1) break outer;
+          }
+        }
         // 判断行← →
-        let x = n-i;
+        x = n-i;
         if(x>=0 && x%guid+line <= guid) {
           for(let j=line; j--;) {
             if (pattern[x+j] !== 0) continue;
@@ -254,36 +287,6 @@
             if (-r > result) {
               result = -r;
               point = x+j*guid;
-            }
-            if (result == 1) break outer;
-          }
-        }
-        // 判断斜线 左上右下↖↘
-        x = n-i*(guid+1);
-        if (x>=0 && x%guid+line <= guid) {
-          for(let j=line; j--;) {
-            if (pattern[x+j*(guid+1)] !== 0) continue;
-            const arr = this.clone(pattern);
-            arr[x+j*(guid+1)] = type;
-            let r = bestChoice(arr, type, x+j*(guid+1), reckon).result;
-            if (-r > result) {
-              result = -r;
-              point = x+j*(guid+1);
-            }
-            if (result == 1) break outer;
-          }
-        }
-        // 判断斜线 左下右上↙↗
-        x = n-i*(guid-1);
-        if (x>=0 && x%guid+line > guid) {
-          for(let j=line; j--;) {
-            if (pattern[x+j*(guid-1)] !== 0) continue;
-            const arr = this.clone(pattern);
-            arr[x+j*(guid-1)] = type;
-            let r = bestChoice(arr, type, x+j*(guid-1), reckon).result;
-            if (-r > result) {
-              result = -r;
-              point = x+j*(guid-1);
             }
             if (result == 1) break outer;
           }
