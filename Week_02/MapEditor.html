@@ -33,10 +33,34 @@
 <body>
   <div class="box"></div>
   <div>
-    <button onclick="localStorage.setItem('map', map)">保存</button>
+    <button onclick="localStorage.setItem('map', JSON.stringify(map))">保存</button>
     <button onclick="navigate(map, [0, 0], [53, 53])">寻路</button>
   </div>
   <script>
+
+    class Sorted {
+      constructor(data, compare) {
+        this.data = data.slice();
+        this.compare = compare || ((a,b) => a-b);
+      }
+      take() {
+        if (!this.data.length) return;
+        const len = this.data.length;
+        let min = this.data[0], minIndex = 0;
+        for (let i = len; i--;) {
+          if (this.compare(this.data[i], min) < 0) {
+            min = this.data[i];
+            minIndex = i;
+          }
+        }
+        this.data[minIndex] = this.data[len-1];
+        this.data.pop();
+        return min;
+      }
+      give(v) {
+        this.data.push(v);
+      }
+    }
 
     const box = document.getElementsByClassName('box')[0];
     const fragment = document.createDocumentFragment();
@@ -55,7 +79,7 @@
     box.addEventListener('contextmenu', e => e.preventDefault());
     // 初始化数据
     function init() {
-      map = JSON.parse(`[${localStorage.getItem('map')}]`) || Array(len).fill(0);
+      map = JSON.parse(localStorage.getItem('map')) || Array(len).fill(0);
       show();
     }
     // 显示地图
@@ -85,7 +109,7 @@
       // 显示目标点
       box.childNodes.item(end[0]+end[1]*guid).classList.add('target');
       const table = Object.create(map);
-      const queue = [start];
+      const queue = new Sorted([start], (a, b) => distance(a) - distance(b));
       // 寻找终点
       async function insert(x, y, n) {
         if (0 > x || x >= guid || 0 > y || y >= guid) return;
@@ -93,10 +117,13 @@
         await sleep(20);
         box.childNodes.item(x+y*guid).classList.add('b');
         table[x+y*guid] = n;
-        queue.push([x, y]);
+        queue.give([x, y]);
       }
-      while(queue.length) {
-        let [x, y] = queue.shift();
+      function distance(point) {
+        return (point[0] - end[0]) ** 2 + (point[1] - end[1]) ** 2;
+      }
+      while(queue.data.length) {
+        let [x, y] = queue.take();
         // 返回路径
         if (x === end[0] && y === end[1]) {
           const path = [];
@@ -108,6 +135,7 @@
           }
           return path;
         };
+        console.log(x, y);
         // +
         await insert(x - 1, y, [x, y]);
         await insert(x, y - 1, [x, y]);
