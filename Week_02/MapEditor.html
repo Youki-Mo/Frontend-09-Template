@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地图编辑器</title>
+  <style type="text/css">
+    .box {
+      width: 700px;
+    }
+    .item {
+      float: left;
+      height: 5px;
+      width: 5px;
+      border: 1px solid white;
+      background-color: bisque;
+    }
+    .item.a {
+      background-color: cornflowerblue;
+    }
+    .item.b {
+      background-color: brown;
+    }
+    .item.c {
+      background-color: coral;
+    }
+    .item.target {
+      background-color: blueviolet;
+    }
+  </style>
+</head>
+<body>
+  <div class="box"></div>
+  <div>
+    <button onclick="localStorage.setItem('map', map)">保存</button>
+    <button onclick="navigate(map, [0, 0], [53, 53])">寻路</button>
+  </div>
+  <script>
+
+    const box = document.getElementsByClassName('box')[0];
+    const fragment = document.createDocumentFragment();
+
+    const guid = 100;
+
+    let map = [];
+    let mousedown = false;
+    let clear = false;
+    // 编辑器相关事件
+    box.addEventListener('mousedown', e => {
+      mousedown = true;
+      clear = (e.which === 3);
+    });
+    box.addEventListener('mouseup', () => mousedown = false);
+    box.addEventListener('contextmenu', e => e.preventDefault());
+    // 初始化数据
+    function init() {
+      map = JSON.parse(`[${localStorage.getItem('map')}]`) || Array(len).fill(0);
+      show();
+    }
+    // 显示地图
+    function show() {
+      for(let i=0; i < guid; i++) {
+        for(let j=0; j < guid; j++) {
+          const item = document.createElement('div');
+          item.className = `item${map[i*guid+j] === 1 ? ' a' : ''}`;
+          item.addEventListener('mousemove', e => {
+            if (mousedown) {
+              if (clear) {
+                e.target.classList.remove('a');
+                map[i*guid+j] = 0;
+              } else {
+                e.target.classList.add('a');
+                map[i*guid+j] = 1;
+              }
+            }
+          });
+          fragment.appendChild(item);
+        }
+      }
+      box.appendChild(fragment);
+    }
+    // 导航寻路
+    async function navigate(map, start, end) {
+      // 显示目标点
+      box.childNodes.item(end[0]+end[1]*guid).classList.add('target');
+      const table = Object.create(map);
+      const queue = [start];
+      // 寻找终点
+      async function insert(x, y, n) {
+        if (0 > x || x >= guid || 0 > y || y >= guid) return;
+        if (table[x+y*guid]) return;
+        await sleep(20);
+        box.childNodes.item(x+y*guid).classList.add('b');
+        table[x+y*guid] = n;
+        queue.push([x, y]);
+      }
+      while(queue.length) {
+        let [x, y] = queue.shift();
+        // 返回路径
+        if (x === end[0] && y === end[1]) {
+          const path = [];
+          while(x !== start[0] || y !== start[0]) {
+            path.push(map[x + y * guid]);
+            [x, y] = table[x + y * guid];
+            await sleep(20);
+            box.childNodes.item(x+y*guid).classList.add('c');
+          }
+          return path;
+        };
+        // +
+        await insert(x - 1, y, [x, y]);
+        await insert(x, y - 1, [x, y]);
+        await insert(x + 1, y, [x, y]);
+        await insert(x, y + 1, [x, y]);
+        // ×
+        await insert(x - 1, y - 1, [x, y]);
+        await insert(x + 1, y - 1, [x, y]);
+        await insert(x - 1, y + 1, [x, y]);
+        await insert(x + 1, y + 1, [x, y]);
+      }
+      return null;
+    }
+    // 异步执行
+    function sleep(time) {
+      return new Promise(resolve => {
+        setTimeout(resolve, time)
+      })
+    }
+    init();
+  </script>
+</body>
+</html>
