@@ -79,7 +79,7 @@
     box.addEventListener('contextmenu', e => e.preventDefault());
     // 初始化数据
     function init() {
-      map = JSON.parse(localStorage.getItem('map')) || Array(len).fill(0);
+      map = JSON.parse(localStorage.getItem('map')) || Array(guid*guid).fill(0);
       show();
     }
     // 显示地图
