@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KMP字符串模式匹配算法</title>
+</head>
+<body>
+  <script>
+    function kmp(source, pattern) {
+      const len = pattern.length;
+      console.log(pattern, source);
+      let table = new Array(len).fill(0);
+      {
+        let i = 1; j = 0;
+        while(i < len) {
+          if (pattern[i] === pattern[j]) {
+            j++, i++;
+            table[i] = j;
+          } else {
+            if (j > 0) {
+              j = table[j];
+            } else {
+              i++;
+            }
+          }
+        }
+      }
+      {
+        let i = 0; j = 0;
+        while(i < source.length) {
+          if (source[i] === pattern[j]) {
+            j++, i++;
+          } else {
+            if (j > 0) {
+              j = table[j];
+            } else {
+              i++;
+            }
+          }
+          if (j === len) return true;
+        }
+      }
+      return false;
+    }
+    console.log(kmp('aaacxxxcc', 'cx'));
+  </script>
+</body>
+</html>
