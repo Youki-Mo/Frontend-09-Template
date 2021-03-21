@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>字典树</title>
+</head>
+<body>
+  <script>
+    let $ = Symbol('$');
+    class Trie {
+      constructor() {
+        this.root = Object.create(null);
+      }
+      insert(word) {
+        let node = this.root;
+        for (let c of word) {
+          // 初始化子节点
+          !node[c] && (node[c] = Object.create(null));
+          // “翻字典”，定位到对应的子节点
+          node = node[c];
+          // 初始化子节点数
+          !($ in node) && (node[$] = 0);
+          // 累加子节点数
+          node[$]++;
+        }
+      }
+      most() {
+        let max = 0;
+        let maxWord;
+        const visit = (node, word) => {
+          if (node[$] && node[$] > max) {
+            max = node[$];
+            maxWord = word;
+          }
+          for(const p in node) {
+            visit(node[p], word+p);
+          }
+        }
+        visit(this.root, '');
+        console.log(maxWord, max);
+      }
+    }
+    const randomWord = len => {
+      let s = '';
+      for(let i = len; i--;) {
+        s += String.fromCharCode(Math.random() * 26 + 'a'.charCodeAt(0));
+      }
+      return s;
+    }
+    const trie = new Trie();
+    for(let i=100000; i--;) {
+      trie.insert(randomWord(4));
+    }
+    console.log(trie);
+    trie.most();
+  </script>
+</body>
+</html>
