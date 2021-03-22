@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wildcard</title>
+</head>
+<body>
+  <script>
+    function Wildcard(source, pattern) {
+      const len = pattern.length;
+      // 计算“*”的数量
+      let starCount = 0;
+      for(let i=len; i--;) {
+        if (pattern[i] === '*') {
+          starCount++;
+        }
+      }
+      // 剩下没有“*”的情况
+      if (starCount === '0') {
+        for(let i=len; i--;) {
+          if (pattern[i] !== source[i] && pattern[i] !== '?') {
+            return false;
+          }
+        }
+      }
+      let i=0, lastIndex= 0;
+      // 处理第一个“*”前面的字符串
+      for(i=0; pattern[i] !== '*'; i++) {
+        if (pattern[i] !== source[i] && pattern[i] !== '?') {
+          return false;
+        }
+      }
+      lastIndex = i; // 接上之前的工作
+      // 处理后续
+      for(let p = 0; p < starCount-1;p++) {
+        i++;
+        let subPattern = '';
+        while(pattern[i] !== '*') {
+          subPattern += pattern[i];
+          i++;
+        }
+        // 生成正则
+        let reg = new RegExp(subPattern.replace(/\?/g, '[\\s\\S]', 'g'));
+        reg.lastIndex = lastIndex;
+        lastIndex = reg.lastIndex;
+      }
+      // 最后一个“*”号匹配
+      for(let j=0; j<=source.length-lastIndex && pattern[pattern.length - j] !== '*'; j++) {
+        const PI = pattern.length - j, SI = source.length - j;
+        if (pattern[PI] !== source[SI] && pattern[PI] !== '?') {
+          return false;
+        }
+      }
+      return true;
+    }
+    console.log(Wildcard('axaxbxx', 'a?x*b?x'));
+    console.log(Wildcard('axaxbxx', 'a*x*b?x'));
+  </script>
+</body>
+</html>
