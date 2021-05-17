@@ -89,4 +89,38 @@
   computed(0, 0, 1, 1) // 10001
   ```
 
-## 选择
+## 伪类
+* 链接/行为
+  * :any-link
+  * :link :visited
+  * :hover
+  * :acitve
+  * :focus
+  * :target
+
+  注意，使用了visited或link后无法改变字体颜色以外的样式
+
+* 树结构
+  * :empty
+  * :nth-child()
+  * :nth-last-child()
+  * :first-child :last-child :only-child
+
+  注意 empty nth-last-child last-child only-child 会破坏CSS回溯原则，影响性能
+
+* 逻辑型
+  * :not伪类
+  * :where :has
+
+  应尽量避免使用复杂的选择器，尽量用简单选择器代替
+
+## 伪元素
+* ::before
+* ::after
+* ::first-line
+* ::first-letter
+
+### 思考题
+* 为什么 first-letter 可以设置 float 之类的，而 first-line 不行呢？
+
+  答：first-line只控制第一排的文字，而文字第一行需要排版渲染完成后才能确定，渲染完成后再改盒模型如果再触发渲染，这样会陷入死循环，带来各种各样的问题，所以不允许改变盒模型相关样式
