@@ -183,7 +183,7 @@ reverseChildren(element);
   * getBoundingClientRect()
 
 ## 其他API
-### 标准化组织
+我们的API来自这四个标准化组织
 * knronos
   * WebGL
 * ECMA
