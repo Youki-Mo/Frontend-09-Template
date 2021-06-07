@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div>
+    <div class="class" id="id"></div>
+  </div>
+  <script>
+
+    function match(selector, element) {
+      let regexp = /\s+(\+|~|>)\s+/g;
+      selector.match(regexp);
+      let arr = selector.replace(regexp, RegExp.$1).replace(/\s+/g, ' ').split(' ');
+      arr = arr.map(v => {
+        if (v.charAt(0) === '#') {
+          v.replace('#', '').replace('')
+        }
+        return v;
+      });
+      console.log(selector, arr);
+      return true;
+    }
+
+    match('div #id.class', document.getElementById('id'));
+    match('div #id ~ .class');
+    match('div #id  +  .class');
+  </script>
+</body>
+</html>
