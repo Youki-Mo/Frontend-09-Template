@@ -20,3 +20,4 @@ rev/
 *.sln
 *.rar
 *.zip
+.nyc_output
